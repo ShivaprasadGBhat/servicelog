@@ -17,7 +17,7 @@
 #include "config.h"
 #include "platform.h"
 
-#define ARG_LIST	"i:t:s:e:E:S:R:r:l:hvV"
+#define ARG_LIST	"i:t:s:e:E:S:R:r:l:hvVT"
 
 static char *cmd;
 
@@ -37,6 +37,7 @@ static struct option long_options[] = {
 	{"help",	    no_argument,        NULL, 'h'},
 	{"verbose",	    no_argument,	NULL, 'v'},
 	{"Version",	    no_argument,	NULL, 'V'},
+	{"test",	    no_argument,	NULL, 'T'},
 	{0,0,0,0}
 };
 
@@ -152,6 +153,7 @@ main(int argc, char *argv[])
 	int option_index, rc;
 	int verbose = 0;
 	int platform = 0;
+	int test = 0;
 	uint32_t id = 0;
 	int other_flag = 0;
 	size_t sz;
@@ -161,15 +163,6 @@ main(int argc, char *argv[])
 	struct sl_query query;
 
 	cmd = argv[0];
-
-	platform = get_platform();
-	switch (platform) {
-	case PLATFORM_UNKNOWN:
-	case PLATFORM_POWERNV:
-		fprintf(stderr, "%s: is not supported on the %s platform\n",
-					cmd, __power_platform_name(platform));
-		exit(1);
-	}
 
 	if (argc <= 1) {
 		print_usage();
@@ -252,12 +245,26 @@ main(int argc, char *argv[])
 			print_usage();
 			exit(1);
 			break;
+		case 'T':
+			test = 1;
+			break;
 		default:
 			printf("huh?\n");
 		case 'h':	/* help */
 			print_usage();
 			exit(0);
 			break;
+		}
+	}
+
+	platform = get_platform();
+	switch (platform) {
+	case PLATFORM_UNKNOWN:
+	case PLATFORM_POWERNV:
+		if (!test) {
+			fprintf(stderr, "%s: is not supported on the %s platform\n",
+				cmd, __power_platform_name(platform));
+			exit(1);
 		}
 	}
 

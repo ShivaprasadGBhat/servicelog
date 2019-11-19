@@ -30,7 +30,7 @@
 #define ACTION_TRUNCATE_NOTIFY	5
 #define ACTION_CLEAN		6
 
-#define ARG_LIST	"a:cst:fh"
+#define ARG_LIST	"a:cst:fhT"
 
 #define SECONDS_IN_DAY		24 * 60 * 60
 #define SECONDS_IN_YEAR		365 * SECONDS_IN_DAY
@@ -44,6 +44,7 @@ static struct option long_options[] = {
 	{"force",	no_argument,		NULL, 'f'},
 	{"age",		required_argument,	NULL, 'a'},
 	{"help",	no_argument,		NULL, 'h'},
+	{"test",	no_argument,            NULL, 'T'},
 	{0, 0, 0, 0}
 };
 
@@ -86,6 +87,7 @@ main(int argc, char *argv[])
 	int flag_force=0;
 	int age = 60;	/* default age for --clean */
 	int platform = 0;
+	int test = 0;
 	char buf[124];
 	char *tmp;
 	char *next_char;
@@ -94,15 +96,6 @@ main(int argc, char *argv[])
 	time_t now;
 
 	cmd = argv[0];
-
-	platform = get_platform();
-	switch (platform) {
-	case PLATFORM_UNKNOWN:
-	case PLATFORM_POWERNV:
-		fprintf(stderr, "%s: is not supported on the %s platform\n",
-					cmd, __power_platform_name(platform));
-		exit(1);
-	}
 
 	if (argc <= 1) {
 		print_usage();
@@ -173,6 +166,9 @@ main(int argc, char *argv[])
 		case 'h':	/* help */
 			print_usage();
 			exit(0);
+		case 'T':
+			test = 1;
+			break;
 		case '?':
 			print_usage();
 			exit(1);
@@ -182,6 +178,18 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 	}
+
+	platform = get_platform();
+	switch (platform) {
+	case PLATFORM_UNKNOWN:
+	case PLATFORM_POWERNV:
+		if (!test) {
+			fprintf(stderr, "%s: is not supported on the %s platform\n",
+				cmd, __power_platform_name(platform));
+			exit(1);
+		}
+	}
+
 
 	if (optind < argc) {
 		print_usage();

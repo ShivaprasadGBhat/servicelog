@@ -35,6 +35,7 @@ static char *cmd;
 static struct option long_options[] = {
 	{"query",	    required_argument, NULL, 'q'},
 	{"dump",	    no_argument,       NULL, 'd'},
+	{"test",	    no_argument,       NULL, 'T'},
 	{"help",	    no_argument,       NULL, 'h'},
 	{"verbose",	    no_argument,       NULL, 'v'},
 	{"version",	    no_argument,       NULL, 'V'},
@@ -104,6 +105,7 @@ main(int argc, char *argv[])
 {
 	int option_index, rc;
 	int dump = 0;
+	int test = 0;
 	int platform = 0;
 	char *query = NULL;
 	servicelog *slog;
@@ -111,18 +113,9 @@ main(int argc, char *argv[])
 
 	cmd = argv[0];
 
-	platform = get_platform();
-	switch (platform) {
-	case PLATFORM_UNKNOWN:
-	case PLATFORM_POWERNV:
-		fprintf(stderr, "%s: is not supported on the %s platform\n",
-					cmd, __power_platform_name(platform));
-		exit(1);
-	}
-
 	for (;;) {
 		option_index = 0;
-		rc = getopt_long(argc, argv, "dq:vVh", long_options,
+		rc = getopt_long(argc, argv, "dq:vVhT", long_options,
 				 &option_index);
 
 		if (rc == -1)
@@ -146,6 +139,9 @@ main(int argc, char *argv[])
 			print_usage(argv[0]);
 			exit(0);
 			break;
+		case 'T':
+			test = 1;
+			break;
 		case '?':
 			print_usage(argv[0]);
 			exit(1);
@@ -154,6 +150,17 @@ main(int argc, char *argv[])
 			fprintf(stderr, "Encountered a problem while parsing "
 				"options; report a bug to the maintainers "
 				"(%s).\n", PACKAGE_BUGREPORT);
+			exit(1);
+		}
+	}
+
+	platform = get_platform();
+	switch (platform) {
+	case PLATFORM_UNKNOWN:
+	case PLATFORM_POWERNV:
+		if (!test) {
+			fprintf(stderr, "%s: is not supported on the %s platform\n",
+				cmd, __power_platform_name(platform));
 			exit(1);
 		}
 	}

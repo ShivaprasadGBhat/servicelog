@@ -51,6 +51,7 @@ static struct option long_options[] = {
 	{"dump",	    no_argument,       NULL, 'd'},
 
 /* common options */
+	{"test",	    no_argument,       NULL, 'T'},
 	{"help",	    no_argument,       NULL, 'h'},
 	{"verbose",	    no_argument,       NULL, 'v'},
 	{"version",	    no_argument,       NULL, 'V'},
@@ -157,24 +158,16 @@ main(int argc, char **argv)
 	int v29_opts = 0, v1_opts = 0;
 	int option_index, rc;
 	int platform = 0;
+	int test = 0;
 
 	cmd = argv[0];
-
-	platform = get_platform();
-	switch (platform) {
-	case PLATFORM_UNKNOWN:
-	case PLATFORM_POWERNV:
-		fprintf(stderr, "%s: is not supported on the %s platform\n",
-					cmd, __power_platform_name(platform));
-		exit(1);
-	}
 
 	set_up_commands();
 
 	for (;;) {
 		option_index = 0;
 
-		rc = getopt_long(argc, argv, "dE:e:hi:q:R:r:S:s:t:Vv",
+		rc = getopt_long(argc, argv, "dE:e:hi:q:R:r:S:s:t:VvT",
 					long_options, &option_index);
 		if (rc == -1)
 			break;
@@ -198,6 +191,9 @@ main(int argc, char **argv)
 			exit(0);
 		case 'v':
 			break;
+		case 'T':
+			test = 1;
+			break;
 		case 'h':
 		case '?':
 			print_usage();
@@ -208,6 +204,18 @@ main(int argc, char **argv)
 			/* NOTREACHED */
 		}
 	}
+
+	platform = get_platform();
+	switch (platform) {
+	case PLATFORM_UNKNOWN:
+	case PLATFORM_POWERNV:
+		if (!test) {
+			fprintf(stderr, "%s: is not supported on the %s platform\n",
+				cmd, __power_platform_name(platform));
+			exit(1);
+		}
+	}
+
 	if (v1_opts && v29_opts) {
 		fprintf(stderr,
 			"You cannot mix v0.2.9 options with v1+ options.\n\n");
